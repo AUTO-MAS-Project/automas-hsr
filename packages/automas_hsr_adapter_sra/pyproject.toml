@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "automas-hsr-adapter-sra"
+version = "0.1.0"
+description = "StarRailAssistant adapter for AUTO-MAS HSR"
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.12"
+dependencies = ["automas-script-hsr>=0.1.0,<0.2.0"]
+
+[project.urls]
+Homepage = "https://github.com/AUTO-MAS-Project/automas-hsr"
+Repository = "https://github.com/AUTO-MAS-Project/automas-hsr"
+
+[project.entry-points."auto_mas.plugins"]
+automas_hsr_adapter_sra = "automas_hsr_adapter_sra.plugin:Plugin"
+
+[tool.setuptools.packages.find]
+where = ["src"]

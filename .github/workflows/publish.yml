@@ -1,0 +1,71 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package to publish
+        required: true
+        type: choice
+        options:
+          - automas-script-hsr
+          - automas-hsr-adapter-sra
+          - automas-hsr-adapter-m7a
+
+jobs:
+  publish-script-hsr:
+    name: Publish automas-script-hsr
+    if: inputs.package == 'automas-script-hsr'
+    runs-on: ubuntu-latest
+    environment: pypi-script-hsr
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade build
+      - run: python -m build packages/automas_script_hsr --outdir dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
+
+  publish-adapter-sra:
+    name: Publish automas-hsr-adapter-sra
+    if: inputs.package == 'automas-hsr-adapter-sra'
+    runs-on: ubuntu-latest
+    environment: pypi-adapter-sra
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade build
+      - run: python -m build packages/automas_hsr_adapter_sra --outdir dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
+
+  publish-adapter-m7a:
+    name: Publish automas-hsr-adapter-m7a
+    if: inputs.package == 'automas-hsr-adapter-m7a'
+    runs-on: ubuntu-latest
+    environment: pypi-adapter-m7a
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade build
+      - run: python -m build packages/automas_hsr_adapter_m7a --outdir dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
