@@ -61,7 +61,6 @@ HSR_CHINESE_FAILURE_MARKERS: tuple[str, ...] = (
     "主循环超时",
     "强制退出",
     "未识别到战斗按钮",
-    "MemoryOfChaos 主循环失败",
     # ---- SRA 货币战争 final_failure（参考 HSR-外部脚本日志语义审计.md 2.5）----
     "[页面定位] 检测超时",            # CurrencyWars.py:159
     "等待挑战结束超时",               # CurrencyWars.py:708

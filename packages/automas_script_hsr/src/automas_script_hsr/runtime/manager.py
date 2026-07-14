@@ -371,13 +371,6 @@ class HSRManager(TaskExecuteBase):
             and user_config.get("Info", "RemainedDay") != 0
         )
 
-    def _m7a_only_skip_reason(self, executable_user_index: int) -> str | None:
-        """Return the explicit skip reason after the first M7A-only account."""
-
-        if self.effective_engines == ("M7A",) and executable_user_index > 0:
-            return "M7A-only 仅支持当前登录账号"
-        return None
-
     @staticmethod
     def _user_needs_sra(user_config, script_config: Any) -> bool:
         """判断用户是否需要 SRA StartGame 登录/切号。"""
@@ -560,17 +553,6 @@ class HSRManager(TaskExecuteBase):
         try:
             for user_index, user_item in enumerate(self.script_info.user_list):
                 self.script_info.current_index = user_index
-                m7a_skip_reason = self._m7a_only_skip_reason(user_index)
-                if m7a_skip_reason is not None:
-                    user_item.status = "跳过"
-                    user_item.log_record[datetime.now()] = LogRecord(
-                        status=f"跳过：{m7a_skip_reason}",
-                        content=["M7A-only 只执行持久化顺序中第一个可用账号。\n"],
-                    )
-                    self._append_log(
-                        f"用户「{user_item.name}」跳过：{m7a_skip_reason}"
-                    )
-                    continue
                 proxy = None
                 try:
                     proxy = task_cls(
