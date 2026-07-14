@@ -802,7 +802,7 @@ class HSRAutoProxyTask(TaskExecuteBase):
         sra_available = bool(sra_path.strip()) and sra_exe_path.exists()
         if not sra_available:
             return HSRLoginPlan(
-                mode="m7a_fallback",
+                mode="m7a_current_account",
                 sra_exe_path=sra_exe_path,
             )
 

@@ -36,6 +36,7 @@ from app.services import Notify
 from app.utils import get_logger
 from app.utils.constants import TASK_MODE_ZH, UTC4, UTC8
 from .autoproxy import HSRAutoProxyTask
+from .history import general_log_result
 from .manual_review import HSRManualReviewTask
 from .models import CompletionWriteback, HSRRuntimeState
 from .tasks import (
@@ -664,8 +665,10 @@ class HSRManager(TaskExecuteBase):
                     / user_item.name
                     / f"{dt.strftime('%H-%M-%S')}.log"
                 )
-                await Config.save_hsr_log(
-                    log_path, log_item.content, log_item.status
+                await Config.save_general_log(
+                    log_path,
+                    log_item.content,
+                    general_log_result(log_item.status),
                 )
 
     async def _restore_external_configs(self) -> str:

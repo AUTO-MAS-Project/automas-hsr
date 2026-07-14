@@ -25,7 +25,7 @@ from app.utils import ProcessManager
 
 HSRPhase = Literal["daily", "weekly"]
 HSRScriptRunner = Literal["M7A", "SRA"]
-HSRLoginMode = Literal["sra_switch", "sra_remembered", "m7a_fallback"]
+HSRLoginMode = Literal["sra_switch", "sra_remembered", "m7a_current_account"]
 HSRModuleResultStatus = Literal["completed", "failed", "incomplete", "skipped"]
 
 

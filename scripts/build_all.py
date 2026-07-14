@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -16,6 +17,8 @@ def main() -> None:
     )
     for package in packages:
         output_dir = DIST_DIR / package.name
+        if output_dir.exists():
+            shutil.rmtree(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
         subprocess.run(
             [sys.executable, "-m", "build", str(package), "--outdir", str(output_dir)],

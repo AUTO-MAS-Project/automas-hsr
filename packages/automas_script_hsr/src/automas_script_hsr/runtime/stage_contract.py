@@ -6,7 +6,7 @@ from automas_script_hsr.contracts import HSRStageCategory, HSRStageOption
 
 
 def normalize_stage_categories(payload: dict[str, Any]) -> tuple[HSRStageCategory, ...]:
-    """Convert the legacy rich-editor stage payload to the public HSR contract."""
+    """Convert the current stage-provider payload to the public HSR contract."""
 
     categories: list[HSRStageCategory] = []
     for raw_category in payload.get("categories", []):

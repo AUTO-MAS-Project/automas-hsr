@@ -1,6 +1,8 @@
 [dependency-groups]
 dev = [
     "build>=1.2",
+    "pip>=25",
+    "twine>=6.1",
 ]
 
 [tool.uv]
