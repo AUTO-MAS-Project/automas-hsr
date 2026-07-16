@@ -8,6 +8,7 @@ on:
         required: true
         type: choice
         options:
+          - automas-hsr
           - automas-script-hsr
           - automas-hsr-adapter-sra
           - automas-hsr-adapter-m7a
@@ -17,6 +18,7 @@ on:
         type: string
   push:
     tags:
+      - "automas-hsr-v*"
       - "automas-script-hsr-v*"
       - "automas-hsr-adapter-sra-v*"
       - "automas-hsr-adapter-m7a-v*"
@@ -37,7 +39,7 @@ jobs:
       version: ${{ steps.release.outputs.version }}
       artifact_name: ${{ steps.release.outputs.artifact_name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: astral-sh/setup-uv@v6

@@ -7,6 +7,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = {
+    "automas_hsr": {
+        "name": "automas-hsr",
+        "entry_point": None,
+        "dependencies": {
+            "automas-script-hsr>=0.1.0,<0.2.0",
+            "automas-hsr-adapter-sra>=0.1.0,<0.2.0",
+            "automas-hsr-adapter-m7a>=0.1.0,<0.2.0",
+        },
+    },
     "automas_script_hsr": {
         "name": "automas-script-hsr",
         "entry_point": "automas_script_hsr.plugin:Plugin",
@@ -33,10 +42,14 @@ class PackageMetadataTests(unittest.TestCase):
                 data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
                 project = data["project"]
                 self.assertEqual(project["name"], expected["name"])
-                self.assertEqual(
-                    project["entry-points"]["auto_mas.plugins"][directory],
-                    expected["entry_point"],
-                )
+                if expected["entry_point"] is None:
+                    self.assertNotIn("entry-points", project)
+                    self.assertEqual(data["tool"]["setuptools"]["packages"], [])
+                else:
+                    self.assertEqual(
+                        project["entry-points"]["auto_mas.plugins"][directory],
+                        expected["entry_point"],
+                    )
                 self.assertTrue(
                     expected["dependencies"].issubset(set(project.get("dependencies", [])))
                 )

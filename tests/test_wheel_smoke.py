@@ -8,6 +8,7 @@ from pathlib import Path
 from scripts.smoke_wheels import (
     ADAPTER_DISTRIBUTIONS,
     CORE_DISTRIBUTION,
+    META_DISTRIBUTION,
     WheelMetadata,
     _external_requirements,
     _read_wheel_metadata,
@@ -70,9 +71,11 @@ Requires-Dist: automas-script-hsr>=0.1.0,<0.2.0
             encoding="utf-8"
         )
         self.assertIn("--mode local-adapter-resolution", ci)
+        self.assertIn("--mode local-meta-resolution", ci)
         self.assertIn("--mode metadata-only", publish)
         self.assertEqual(
             ADAPTER_DISTRIBUTIONS,
             ("automas-hsr-adapter-sra", "automas-hsr-adapter-m7a"),
         )
         self.assertEqual(CORE_DISTRIBUTION, "automas-script-hsr")
+        self.assertEqual(META_DISTRIBUTION, "automas-hsr")

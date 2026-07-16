@@ -9,6 +9,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_CONFIG = {
+    "automas-hsr": (
+        "packages/automas_hsr",
+        "pypi-hsr",
+    ),
     "automas-script-hsr": (
         "packages/automas_script_hsr",
         "pypi-script-hsr",

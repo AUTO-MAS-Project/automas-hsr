@@ -15,12 +15,16 @@ from pathlib import Path
 
 
 CORE_DISTRIBUTION = "automas-script-hsr"
+META_DISTRIBUTION = "automas-hsr"
 ADAPTER_DISTRIBUTIONS = (
     "automas-hsr-adapter-sra",
     "automas-hsr-adapter-m7a",
 )
-WORKSPACE_DISTRIBUTIONS = frozenset({CORE_DISTRIBUTION, *ADAPTER_DISTRIBUTIONS})
+WORKSPACE_DISTRIBUTIONS = frozenset(
+    {META_DISTRIBUTION, CORE_DISTRIBUTION, *ADAPTER_DISTRIBUTIONS}
+)
 ENTRY_POINTS = {
+    META_DISTRIBUTION: None,
     CORE_DISTRIBUTION: (
         "automas_script_hsr",
         "automas_script_hsr.plugin:Plugin",
@@ -34,7 +38,11 @@ ENTRY_POINTS = {
         "automas_hsr_adapter_m7a.plugin:Plugin",
     ),
 }
-SMOKE_MODES = ("local-adapter-resolution", "metadata-only")
+SMOKE_MODES = (
+    "local-adapter-resolution",
+    "local-meta-resolution",
+    "metadata-only",
+)
 _REQUIREMENT_NAME_PATTERN = re.compile(r"^\s*([A-Za-z0-9][A-Za-z0-9._-]*)")
 
 
@@ -120,17 +128,22 @@ def _expected_installation(
 ) -> dict[str, dict[str, str]]:
     expected: dict[str, dict[str, str]] = {}
     for distribution in distributions:
-        entry_name, entry_value = ENTRY_POINTS[distribution]
         metadata = _read_wheel_metadata(wheels[distribution])
         if _canonical_name(metadata.name) != distribution:
             raise RuntimeError(
                 f"wheel name mismatch for {distribution}: {metadata.name!r}"
             )
-        expected[distribution] = {
-            "entry_name": entry_name,
-            "entry_value": entry_value,
-            "version": metadata.version,
-        }
+        contract = {"version": metadata.version}
+        entry_point = ENTRY_POINTS[distribution]
+        if entry_point is not None:
+            entry_name, entry_value = entry_point
+            contract.update(
+                {
+                    "entry_name": entry_name,
+                    "entry_value": entry_value,
+                }
+            )
+        expected[distribution] = contract
     return expected
 
 
@@ -151,6 +164,16 @@ for distribution, contract in expected.items():
         raise SystemExit(
             f"unexpected version for {distribution}: {metadata.version!r}"
         )
+    if "entry_name" not in contract:
+        plugin_entry_points = [
+            item for item in metadata.entry_points if item.group == "auto_mas.plugins"
+        ]
+        if plugin_entry_points:
+            raise SystemExit(
+                f"meta-package unexpectedly declares plugin entry points: "
+                f"{plugin_entry_points!r}"
+            )
+        continue
     entry_points = {
         item.name: item.value
         for item in metadata.entry_points
@@ -267,6 +290,69 @@ def smoke_local_adapter_resolution(
             _inspect_installation(python, expected)
 
 
+def smoke_local_meta_resolution(dist_dir: Path) -> None:
+    distributions = (
+        META_DISTRIBUTION,
+        CORE_DISTRIBUTION,
+        *ADAPTER_DISTRIBUTIONS,
+    )
+    wheels = {
+        distribution: _find_wheel(dist_dir, distribution)
+        for distribution in distributions
+    }
+    metadata = [
+        _read_wheel_metadata(wheels[distribution])
+        for distribution in distributions
+    ]
+    external_requirements = _external_requirements(metadata)
+
+    with tempfile.TemporaryDirectory(prefix="automas-hsr-meta-smoke-") as temp_dir:
+        temp_root = Path(temp_dir)
+        dependency_wheelhouse = temp_root / "external-wheelhouse"
+        dependency_wheelhouse.mkdir()
+        if external_requirements:
+            subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "download",
+                    "--disable-pip-version-check",
+                    "--only-binary=:all:",
+                    "--dest",
+                    str(dependency_wheelhouse),
+                    *external_requirements,
+                ],
+                check=True,
+            )
+
+        python = _create_environment(temp_root)
+        local_wheelhouses = sorted({wheel.parent for wheel in wheels.values()})
+        find_links = [
+            item
+            for wheelhouse in (dependency_wheelhouse, *local_wheelhouses)
+            for item in ("--find-links", str(wheelhouse))
+        ]
+        subprocess.run(
+            [
+                str(python),
+                "-m",
+                "pip",
+                "install",
+                "--disable-pip-version-check",
+                "--no-index",
+                *find_links,
+                str(wheels[META_DISTRIBUTION]),
+            ],
+            check=True,
+        )
+        subprocess.run([str(python), "-m", "pip", "check"], check=True)
+        _inspect_installation(
+            python,
+            _expected_installation(wheels, distributions),
+        )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Install and inspect built wheels")
     parser.add_argument("dist_dir", type=Path)
@@ -284,6 +370,17 @@ def main() -> None:
         distributions = tuple(args.expected_packages or ENTRY_POINTS)
         smoke_metadata_only(dist_dir, distributions)
         print(f"metadata-only wheel smoke passed: {', '.join(distributions)}")
+        return
+
+    if args.mode == "local-meta-resolution":
+        if args.expected_packages:
+            parser.error("local-meta-resolution does not accept --expected-package")
+        smoke_local_meta_resolution(dist_dir)
+        print(
+            "local meta-package dependency resolution passed: "
+            f"{META_DISTRIBUTION} -> "
+            f"{CORE_DISTRIBUTION}, {', '.join(ADAPTER_DISTRIBUTIONS)}"
+        )
         return
 
     adapters = tuple(args.expected_packages or ADAPTER_DISTRIBUTIONS)
