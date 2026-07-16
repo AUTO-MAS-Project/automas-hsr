@@ -1,11 +1,11 @@
 [build-system]
-requires = ["setuptools>=77", "wheel"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "automas-hsr-adapter-m7a"
+name = "automas-hsr"
 version = "0.1.0"
-description = "March7thAssistant adapter for AUTO-MAS HSR"
+description = "AUTO-MAS HSR plugin bundle for one-click core, SRA, and M7A installation"
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.12"
 authors = [{ name = "AUTO-MAS Team" }]
@@ -13,7 +13,8 @@ license = "AGPL-3.0-or-later"
 license-files = ["LICENSE"]
 dependencies = [
     "automas-script-hsr>=0.1.0,<0.2.0",
-    "PyYAML>=6",
+    "automas-hsr-adapter-sra>=0.1.0,<0.2.0",
+    "automas-hsr-adapter-m7a>=0.1.0,<0.2.0",
 ]
 
 [project.urls]
@@ -22,8 +23,5 @@ Repository = "https://github.com/AUTO-MAS-Project/automas-hsr"
 Documentation = "https://doc.auto-mas.top/"
 Issues = "https://github.com/AUTO-MAS-Project/automas-hsr/issues"
 
-[project.entry-points."auto_mas.plugins"]
-automas_hsr_adapter_m7a = "automas_hsr_adapter_m7a.plugin:Plugin"
-
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.setuptools]
+packages = []

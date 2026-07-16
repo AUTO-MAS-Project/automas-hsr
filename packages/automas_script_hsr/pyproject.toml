@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,11 +8,16 @@ version = "0.1.0"
 description = "HSR orchestration and adapter contracts for AUTO-MAS"
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.12"
-dependencies = ["pydantic>=2"]
+authors = [{ name = "AUTO-MAS Team" }]
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
+dependencies = ["jinja2>=3.1", "pydantic>=2"]
 
 [project.urls]
 Homepage = "https://github.com/AUTO-MAS-Project/automas-hsr"
 Repository = "https://github.com/AUTO-MAS-Project/automas-hsr"
+Documentation = "https://doc.auto-mas.top/"
+Issues = "https://github.com/AUTO-MAS-Project/automas-hsr/issues"
 
 [project.entry-points."auto_mas.plugins"]
 automas_script_hsr = "automas_script_hsr.plugin:Plugin"

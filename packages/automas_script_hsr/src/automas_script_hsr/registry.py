@@ -6,8 +6,6 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from app.core.script_types import ScriptRecordCapability
-
 from .contracts import (
     HSRAdapterGroup,
     HSRCapabilitySnapshot,
@@ -236,15 +234,10 @@ class HSRRegistryService:
     def resolve_record_capability(
         self,
         config_data: dict[str, Any],
-    ) -> ScriptRecordCapability:
+    ) -> HSRCapabilitySnapshot:
         """供 ScriptTypeProvider 解析单条 HSR 脚本能力。"""
 
-        snapshot = self.snapshot(script_config=config_data)
-        return ScriptRecordCapability(
-            available=snapshot.available,
-            unavailable_reason=snapshot.unavailable_reason,
-            supported_modes=snapshot.supported_modes,
-        )
+        return self.snapshot(script_config=config_data)
 
     @staticmethod
     def _normalize_engine(value: str) -> HSREngine:
@@ -276,7 +269,7 @@ class HSRRegistryService:
                 await session.close()
             except Exception as exc:  # noqa: BLE001
                 errors.append(f"{engine}: {type(exc).__name__}: {exc}")
-            finally:
+            else:
                 self.release_session(engine, session)
         return tuple(errors)
 

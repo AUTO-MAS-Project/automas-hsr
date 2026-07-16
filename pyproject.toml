@@ -1,6 +1,8 @@
 [dependency-groups]
 dev = [
     "build>=1.2",
+    "pip>=25",
+    "twine>=6.1",
 ]
 
 [tool.uv]
@@ -8,12 +10,14 @@ package = false
 
 [tool.uv.workspace]
 members = [
+    "packages/automas_hsr",
     "packages/automas_script_hsr",
     "packages/automas_hsr_adapter_sra",
     "packages/automas_hsr_adapter_m7a",
 ]
 
 [tool.uv.sources]
+"automas-hsr" = { workspace = true }
 "automas-script-hsr" = { workspace = true }
 "automas-hsr-adapter-sra" = { workspace = true }
 "automas-hsr-adapter-m7a" = { workspace = true }

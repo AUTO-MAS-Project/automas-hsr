@@ -8,64 +8,94 @@ on:
         required: true
         type: choice
         options:
+          - automas-hsr
           - automas-script-hsr
           - automas-hsr-adapter-sra
           - automas-hsr-adapter-m7a
+      version:
+        description: Exact version from the selected package pyproject.toml
+        required: true
+        type: string
+  push:
+    tags:
+      - "automas-hsr-v*"
+      - "automas-script-hsr-v*"
+      - "automas-hsr-adapter-sra-v*"
+      - "automas-hsr-adapter-m7a-v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-${{ github.ref }}-${{ inputs.package || 'tag' }}
+  cancel-in-progress: false
 
 jobs:
-  publish-script-hsr:
-    name: Publish automas-script-hsr
-    if: inputs.package == 'automas-script-hsr'
+  build:
     runs-on: ubuntu-latest
-    environment: pypi-script-hsr
-    permissions:
-      contents: read
-      id-token: write
+    outputs:
+      package: ${{ steps.release.outputs.package }}
+      environment: ${{ steps.release.outputs.environment }}
+      version: ${{ steps.release.outputs.version }}
+      artifact_name: ${{ steps.release.outputs.artifact_name }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
-      - run: python -m pip install --upgrade build
-      - run: python -m build packages/automas_script_hsr --outdir dist
-      - uses: pypa/gh-action-pypi-publish@release/v1
+          enable-cache: true
+      - run: uv sync --locked --all-packages --group dev
+      - id: release
+        name: Resolve and validate release target
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_REF: ${{ github.ref }}
+          INPUT_PACKAGE: ${{ inputs.package }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: >-
+          uv run python scripts/release.py
+          --event-name "$EVENT_NAME"
+          --ref "$RELEASE_REF"
+          --package "$INPUT_PACKAGE"
+          --version "$INPUT_VERSION"
+      - name: Verify tag commit belongs to main
+        if: github.event_name == 'push'
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - run: uv run python -m unittest discover -s tests -v
+      - name: Build selected distribution
+        env:
+          PACKAGE_DIR: ${{ steps.release.outputs.package_dir }}
+        run: uv run python -m build "$PACKAGE_DIR" --outdir dist
+      - run: uv run twine check dist/*
+      - name: Metadata-only smoke test for the selected wheel
+        env:
+          PACKAGE: ${{ steps.release.outputs.package }}
+        run: >-
+          uv run python scripts/smoke_wheels.py dist
+          --mode metadata-only
+          --expected-package "$PACKAGE"
+      - uses: actions/upload-artifact@v4
         with:
-          packages-dir: dist
+          name: ${{ steps.release.outputs.artifact_name }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
 
-  publish-adapter-sra:
-    name: Publish automas-hsr-adapter-sra
-    if: inputs.package == 'automas-hsr-adapter-sra'
+  publish:
+    needs: build
     runs-on: ubuntu-latest
-    environment: pypi-adapter-sra
+    environment:
+      name: ${{ needs.build.outputs.environment }}
     permissions:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/download-artifact@v4
         with:
-          python-version: "3.12"
-      - run: python -m pip install --upgrade build
-      - run: python -m build packages/automas_hsr_adapter_sra --outdir dist
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist
-
-  publish-adapter-m7a:
-    name: Publish automas-hsr-adapter-m7a
-    if: inputs.package == 'automas-hsr-adapter-m7a'
-    runs-on: ubuntu-latest
-    environment: pypi-adapter-m7a
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: python -m pip install --upgrade build
-      - run: python -m build packages/automas_hsr_adapter_m7a --outdir dist
+          name: ${{ needs.build.outputs.artifact_name }}
+          path: dist
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist

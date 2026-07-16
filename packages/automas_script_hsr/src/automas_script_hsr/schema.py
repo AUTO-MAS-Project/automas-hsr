@@ -11,7 +11,7 @@ from app.utils.constants import UTC4, UTC8
 
 
 class HSRModel(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
 
 
 class HSRInfoConfig(HSRModel):
